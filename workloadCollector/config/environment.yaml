@@ -1,0 +1,25 @@
+# System environment configuration for gtrace-benchmark
+
+paths:
+  outputs_dir: "outputs"
+  logs_dir: "logs"
+  reports_dir: "reports"
+
+validation:
+  check_binary_exists: true
+  check_binary_executable: true
+  check_input_files: true
+  check_output_directory_writable: true
+  check_disk_space: true
+
+simulator:
+  resources:
+    min_free_disk_mb: 2048  # Minimum free disk space required to start execution (2 GB)
+
+env_vars_allowlist:
+  - "GEM5"
+  - "PATH"
+  - "LD_LIBRARY_PATH"
+  - "PYTHONPATH"
+  - "LANG"
+  - "LC_"
