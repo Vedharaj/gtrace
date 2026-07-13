@@ -154,3 +154,5 @@ workloadCollector/benchmarks/**/*.out
 workloadCollector/benchmarks/**/coremark
 # Ignore nested git repositories under benchmarks (e.g. coremark subrepo) if they aren't git submodules
 benchmarkSuit/coremark/.git/
+benchmarkSuit/
+benchmarkSuit/coremark
