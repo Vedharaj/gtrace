@@ -1,5 +1,19 @@
 export function renderExecutionTimeline(container, state, onScrub) {
   const scrubberPosPct = state.scrubberPosPct || 76;
+  const maxVal = state.maxCycles || 4102931;
+
+  const formatCyclesCompact = (val) => {
+    if (!val) return '0';
+    if (val >= 1000000) return (val / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (val >= 1000) return (val / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return val.toString();
+  };
+
+  const axis0 = 0;
+  const axis1 = formatCyclesCompact(Math.round(maxVal * 0.25));
+  const axis2 = formatCyclesCompact(Math.round(maxVal * 0.5));
+  const axis3 = formatCyclesCompact(Math.round(maxVal * 0.75));
+  const axis4 = formatCyclesCompact(maxVal);
 
   container.innerHTML = `
     <div class="timeline-panel">
@@ -32,11 +46,11 @@ export function renderExecutionTimeline(container, state, onScrub) {
         </div>
 
         <div class="timeline-axis">
-          <span>0</span>
-          <span>1M</span>
-          <span>2M</span>
-          <span>3M</span>
-          <span>4M</span>
+          <span>${axis0}</span>
+          <span>${axis1}</span>
+          <span>${axis2}</span>
+          <span>${axis3}</span>
+          <span>${axis4}</span>
         </div>
 
         <div class="timeline-track-list">

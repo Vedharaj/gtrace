@@ -2,6 +2,15 @@ export function renderCpuActivity(container, state) {
   const busyPct = state.busyPct || 84;
   const idlePct = 100 - busyPct;
 
+  const formatCycles = (cycles) => {
+    if (!cycles) return '0';
+    if (cycles >= 1e6) return (cycles / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (cycles >= 1e3) return (cycles / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+    return cycles.toLocaleString();
+  };
+
+  const maxCyclesLabel = formatCycles(state.maxCycles || 4102931);
+
   container.innerHTML = `
     <div class="panel">
       <div class="panel-header">
@@ -20,7 +29,7 @@ export function renderCpuActivity(container, state) {
         </div>
         <div class="activity-ticks">
           <span>0 cycles</span>
-          <span>4.1M cycles</span>
+          <span>${maxCyclesLabel} cycles</span>
         </div>
       </div>
 

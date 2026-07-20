@@ -84,11 +84,16 @@ function initApp() {
 function updateCycleState(pct) {
   state.scrubberPosPct = Math.max(0, Math.min(100, pct));
   state.cycles = Math.round((state.scrubberPosPct / 100) * state.maxCycles);
-  state.committedInsts = Math.round((state.scrubberPosPct / 100) * 2913004);
-  state.committedOps = Math.round((state.scrubberPosPct / 100) * 3450112);
-  state.execTime = (state.cycles / 2000000000) * 1000;
-  state.ipc = Number((0.65 + (state.scrubberPosPct / 100) * 0.1).toFixed(2));
-  state.cpi = Number((1 / state.ipc).toFixed(2));
+  state.committedInsts = Math.round((state.scrubberPosPct / 100) * (state.maxInsts || 2913004));
+  state.committedOps = Math.round((state.scrubberPosPct / 100) * (state.maxOps || 3450112));
+  
+  const totalSecs = state.maxExecTime || 2.13;
+  state.execTime = (state.scrubberPosPct / 100) * totalSecs;
+
+  const baseIpc = state.parsedIpc || 0.71;
+  state.ipc = Number((baseIpc * 0.9 + (state.scrubberPosPct / 100) * (baseIpc * 0.2)).toFixed(2));
+  state.cpi = state.ipc > 0 ? Number((1 / state.ipc).toFixed(2)) : 0;
+  
   renderApp();
 }
 
@@ -113,22 +118,149 @@ function togglePlay() {
   renderApp();
 }
 
-function handleFileSelect(fileName, fileObj) {
-  state.loadedFile = fileName;
+function updateStateFromMetrics(metrics, defaultFileName) {
+  const meta = metrics.metadata || {};
+  const sim = metrics.simulation || {};
+  const cpu = metrics.cpu || {};
+  const derived = metrics.derived || {};
 
-  if (fileObj) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target.result;
-      const lines = text.split('\n').filter(line => line.trim().length > 0);
-      if (lines.length > 0) {
-        document.getElementById('terminal-output').textContent = lines.slice(0, 500).join('\n');
-      }
-    };
-    reader.readAsText(fileObj);
+  state.loadedFile = meta.fileName || defaultFileName;
+  
+  // Extract maxCycles, committedInsts, committedOps
+  state.maxCycles = cpu["system.cpu.numCycles"]?.value || sim["simTicks"]?.value || 4102931;
+  state.cycles = state.maxCycles;
+  state.scrubberPosPct = 100;
+
+  state.maxInsts = cpu["system.cpu.instsAdded"]?.value || cpu["system.cpu.instsIssued"]?.value || sim["simInsts"]?.value || 2913004;
+  state.committedInsts = state.maxInsts;
+
+  state.maxOps = sim["simOps"]?.value || Math.round(state.maxInsts * 1.2);
+  state.committedOps = state.maxOps;
+
+  state.parsedIpc = derived.ipc || cpu["system.cpu.ipc"]?.value || 0.71;
+  state.ipc = state.parsedIpc;
+
+  state.parsedCpi = derived.cpi || cpu["system.cpu.cpi"]?.value || 1.42;
+  state.cpi = state.parsedCpi;
+
+  state.maxExecTime = derived.executionTimeSeconds || sim["simSeconds"]?.value || 2.13;
+  state.execTime = state.maxExecTime;
+
+  state.busyPct = derived.cpuUtilizationPercentage !== null && derived.cpuUtilizationPercentage !== undefined
+    ? Math.round(derived.cpuUtilizationPercentage)
+    : 84;
+  
+  // Cache hits/misses
+  state.dcacheHits = cpu["system.cpu.dcache.overallHits::total"]?.value || 0;
+  state.dcacheMisses = cpu["system.cpu.dcache.overallMisses::total"]?.value || 0;
+  state.dcacheAccesses = cpu["system.cpu.dcache.overallAccesses::total"]?.value || 0;
+
+  state.icacheHits = cpu["system.cpu.icache.overallHits::total"]?.value || 0;
+  state.icacheMisses = cpu["system.cpu.icache.overallMisses::total"]?.value || 0;
+  state.icacheAccesses = cpu["system.cpu.icache.overallAccesses::total"]?.value || 0;
+
+  // Branch lookups/mispredictions
+  state.branchLookups = cpu["system.cpu.branchPred.lookups"]?.value || 0;
+  state.branchCondPredicted = cpu["system.cpu.branchPred.condPredicted"]?.value || 0;
+  state.branchCondIncorrect = cpu["system.cpu.branchPred.condIncorrect"]?.value || 0;
+
+  // Flatten and keep all metrics sorted alphabetically
+  const allList = [];
+  for (const k in sim) {
+    allList.push(sim[k]);
+  }
+  for (const k in cpu) {
+    allList.push(cpu[k]);
+  }
+  state.allMetrics = allList.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function uploadStatsFile(fileObj, displayLabel) {
+  const outputElem = document.getElementById('terminal-output');
+  if (outputElem) {
+    outputElem.textContent = `Uploading stats file "${fileObj.name}" to GTrace analysis backend...\n`;
   }
 
-  renderApp();
+  const formData = new FormData();
+  formData.append('file', fileObj);
+
+  fetch('/upload', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.message || `Upload failed with status ${response.status}`);
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    const fileId = data.file_id;
+    if (outputElem) {
+      outputElem.textContent += `Upload successful. File ID: ${fileId}. Requesting metrics...\n`;
+    }
+    return fetch(`/metrics/${fileId}`);
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve parsed metrics with status ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(metrics => {
+    if (outputElem) {
+      const warningStr = metrics.metadata.warnings.length > 0
+        ? `\nWarnings during analysis:\n${metrics.metadata.warnings.map(w => '  - ' + w).join('\n')}`
+        : '';
+      outputElem.textContent += `Successfully parsed ${metrics.metadata.metricCount} metrics in ${metrics.metadata.parseTime}.${warningStr}\n\nDisplaying statistics details.`;
+    }
+    updateStateFromMetrics(metrics, displayLabel || fileObj.name);
+    renderApp();
+  })
+  .catch(err => {
+    console.error(err);
+    if (outputElem) {
+      outputElem.textContent += `\nError during GTrace backend pipeline execution:\n${err.message}\n`;
+    }
+    alert(`Failed to analyze stats: ${err.message}`);
+  });
+}
+
+function handleFileSelect(fileName, fileObj) {
+  if (typeof fileObj === 'string' || !fileObj) {
+    state.loadedFile = fileName;
+    const outputElem = document.getElementById('terminal-output');
+    if (outputElem) {
+      outputElem.textContent = rawTraceLogs.join('\n');
+    }
+    renderApp();
+    return;
+  }
+
+  if (Array.isArray(fileObj)) {
+    let statsFile = fileObj.find(f => f.name.toLowerCase() === 'stats.txt');
+    if (!statsFile) {
+      statsFile = fileObj.find(f => f.name.toLowerCase().includes('stats') && f.name.toLowerCase().endsWith('.txt'));
+    }
+    if (!statsFile) {
+      statsFile = fileObj.find(f => f.name.toLowerCase().endsWith('.txt'));
+    }
+
+    if (statsFile) {
+      uploadStatsFile(statsFile, `${fileName}${statsFile.name}`);
+    } else {
+      const outputElem = document.getElementById('terminal-output');
+      if (outputElem) {
+        outputElem.textContent = `No gem5 stats file (e.g., stats.txt) found in folder.`;
+      }
+      alert('Could not find a valid stats.txt or text statistics file in the selected directory.');
+    }
+    return;
+  }
+
+  uploadStatsFile(fileObj, fileName);
 }
 
 function setupKeyboardShortcuts() {

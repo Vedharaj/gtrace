@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from datetime import UTC, datetime
 
 from models.metric import MetricCategory, ParsedStats
@@ -43,7 +45,12 @@ class ResponseFormatter:
         """
         simulation = self._filter_by_category(parsed, MetricCategory.SIMULATION)
         cpu = self._filter_by_category(parsed, MetricCategory.CPU)
-        derived_stats = DerivedStats(values=derived)
+
+        sanitized_derived = {
+            k: (v if (v is not None and math.isfinite(v)) else None)
+            for k, v in derived.items()
+        }
+        derived_stats = DerivedStats(values=sanitized_derived)
 
         metadata = ResponseMetadata(
             fileName=file_name,
@@ -73,7 +80,10 @@ class ResponseFormatter:
         """
         filtered = {
             name: MetricOut(
-                name=m.name, value=m.value, description=m.description, unit=m.unit
+                name=m.name,
+                value=(m.value if (m.value is not None and math.isfinite(m.value)) else None),
+                description=m.description,
+                unit=m.unit
             )
             for name, m in parsed.metrics.items()
             if m.category == category

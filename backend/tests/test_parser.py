@@ -60,7 +60,7 @@ def test_extractor_new_metric_auto_discovered(sample_stats_path: Path) -> None:
     """A metric never explicitly required (dcache hits) is still extracted."""
     extractor = MetricExtractor(StatsParser(sample_stats_path))
     parsed = extractor.extract()
-    assert "system.cpu.dcache.overallHits" in parsed.metrics
+    assert "system.cpu.dcache.overallHits::total" in parsed.metrics
 
 
 def test_extractor_handles_scientific_notation(tmp_path: Path) -> None:

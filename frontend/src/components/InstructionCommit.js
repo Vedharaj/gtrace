@@ -1,5 +1,6 @@
 export function renderInstructionCommit(container, state) {
-  const formatNum = (num) => num.toLocaleString();
+  const formatNum = (num) => num ? num.toLocaleString() : '0';
+  const scrubberPosPct = state.scrubberPosPct || 76;
 
   container.innerHTML = `
     <div class="panel">
@@ -14,7 +15,7 @@ export function renderInstructionCommit(container, state) {
             <span class="commit-val mono" style="color: var(--color-blue);">${formatNum(state.committedInsts)}</span>
           </div>
           <div class="commit-bar-bg">
-            <div class="commit-bar-fill fill-blue" style="width: 82%;"></div>
+            <div class="commit-bar-fill fill-blue" style="width: ${scrubberPosPct}%;"></div>
           </div>
         </div>
 
@@ -24,7 +25,7 @@ export function renderInstructionCommit(container, state) {
             <span class="commit-val mono" style="color: var(--color-purple);">${formatNum(state.committedOps)}</span>
           </div>
           <div class="commit-bar-bg">
-            <div class="commit-bar-fill fill-purple" style="width: 95%;"></div>
+            <div class="commit-bar-fill fill-purple" style="width: ${scrubberPosPct}%;"></div>
           </div>
         </div>
       </div>

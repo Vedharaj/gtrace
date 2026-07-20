@@ -158,9 +158,10 @@ export function renderHeader(container, activeView, state, onFileSelect) {
   const sysFolderInput = container.querySelector('#sys-folder-input');
   sysFolderInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
-      const firstFile = e.target.files[0];
+      const files = Array.from(e.target.files);
+      const firstFile = files[0];
       const folderName = firstFile.webkitRelativePath.split('/')[0] || 'Selected Folder';
-      onFileSelect(`${folderName}/ (${e.target.files.length} files)`, firstFile);
+      onFileSelect(`${folderName}/`, files);
       dropdown.classList.add('hidden');
     }
   });
@@ -187,8 +188,12 @@ export function renderHeader(container, activeView, state, onFileSelect) {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
     if (e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      onFileSelect(file.name, file);
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length === 1) {
+        onFileSelect(files[0].name, files[0]);
+      } else {
+        onFileSelect('Dropped Folder/Files', files);
+      }
       dropdown.classList.add('hidden');
     }
   });

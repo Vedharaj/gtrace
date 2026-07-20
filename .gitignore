@@ -164,3 +164,4 @@ dist/
 .eslintcache
 *.local
 
+backend/uploads
