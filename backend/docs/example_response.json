@@ -1,0 +1,120 @@
+{
+  "simulation": {
+    "simSeconds": {
+      "name": "simSeconds",
+      "value": 0.000307,
+      "description": "Number of seconds simulated",
+      "unit": "s"
+    },
+    "simTicks": {
+      "name": "simTicks",
+      "value": 307332500.0,
+      "description": "Number of ticks simulated",
+      "unit": ""
+    },
+    "finalTick": {
+      "name": "finalTick",
+      "value": 307332500.0,
+      "description": "Number of ticks from beginning of simulation (without fast-forwarding)",
+      "unit": ""
+    },
+    "simFreq": {
+      "name": "simFreq",
+      "value": 1000000000000.0,
+      "description": "Frequency of simulated ticks",
+      "unit": ""
+    },
+    "hostSeconds": {
+      "name": "hostSeconds",
+      "value": 1.23,
+      "description": "Real seconds taken",
+      "unit": ""
+    },
+    "hostTickRate": {
+      "name": "hostTickRate",
+      "value": 249863008.0,
+      "description": "Simulator tick rate",
+      "unit": "ticks/s"
+    },
+    "hostMemory": {
+      "name": "hostMemory",
+      "value": 1572864.0,
+      "description": "Number of bytes of host memory used",
+      "unit": ""
+    },
+    "simInsts": {
+      "name": "simInsts",
+      "value": 614665.0,
+      "description": "Number of instructions simulated",
+      "unit": ""
+    },
+    "simOps": {
+      "name": "simOps",
+      "value": 614665.0,
+      "description": "Number of ops (including micro ops) simulated",
+      "unit": ""
+    },
+    "hostInstRate": {
+      "name": "hostInstRate",
+      "value": 499728.0,
+      "description": "Simulator instruction rate",
+      "unit": "inst/s"
+    },
+    "hostOpRate": {
+      "name": "hostOpRate",
+      "value": 499728.0,
+      "description": "Simulator op rate",
+      "unit": "op/s"
+    }
+  },
+  "cpu": {
+    "system.cpu.numCycles": {
+      "name": "system.cpu.numCycles",
+      "value": 614665.0,
+      "description": "Number of cpu cycles simulated",
+      "unit": ""
+    },
+    "system.cpu.cpi": {
+      "name": "system.cpu.cpi",
+      "value": 1.0,
+      "description": "CPI: cycles per instruction",
+      "unit": ""
+    },
+    "system.cpu.ipc": {
+      "name": "system.cpu.ipc",
+      "value": 1.0,
+      "description": "IPC: instructions per cycle",
+      "unit": ""
+    },
+    "system.cpu.instsIssued": {
+      "name": "system.cpu.instsIssued",
+      "value": 614665.0,
+      "description": "Number of instructions issued",
+      "unit": ""
+    },
+    "system.cpu.instsAdded": {
+      "name": "system.cpu.instsAdded",
+      "value": 614665.0,
+      "description": "Number of instructions added to IQ",
+      "unit": ""
+    }
+  },
+  "derived": {
+    "ipc": 1.0,
+    "cpi": 1.0,
+    "executionTimeSeconds": 0.000307,
+    "busyCycles": 614665.0,
+    "idlePercentage": 0.0,
+    "instructionEfficiency": 1.0,
+    "hostSpeedInstsPerSec": 499728.0,
+    "cpuUtilizationPercentage": 100.0
+  },
+  "metadata": {
+    "fileName": "stats.txt",
+    "parseTime": "0.001234s",
+    "metricCount": 27,
+    "warnings": [
+      "Malformed metric line: 'this is a malformed line without a numeric value'"
+    ]
+  }
+}

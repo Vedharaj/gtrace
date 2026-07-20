@@ -156,3 +156,11 @@ workloadCollector/benchmarks/**/coremark
 benchmarkSuit/coremark/.git/
 benchmarkSuit
 benchmarkSuit/coremark
+
+# Node / Frontend
+node_modules/
+dist/
+.vite/
+.eslintcache
+*.local
+
